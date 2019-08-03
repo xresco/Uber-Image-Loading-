@@ -1,4 +1,4 @@
 package com.abed.app.ubertest.mvp;
 
-public class MvpView {
+public interface MvpView {
 }
