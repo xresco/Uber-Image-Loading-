@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
+import com.abed.app.ubertest.model.ApiResponse;
 import com.abed.app.ubertest.network.api.FlickrBaseApi;
 
 import java.io.BufferedReader;
@@ -22,7 +23,7 @@ public class ApiCaller {
 
     @NonNull
     @WorkerThread
-    public String execute(@NonNull FlickrBaseApi api) throws IOException {
+    public <R extends ApiResponse> R execute(@NonNull FlickrBaseApi<R> api) throws IOException, ValidationException {
         URL url = new URL(api.getUrl());
         connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(TIMEOUT);
@@ -45,7 +46,8 @@ public class ApiCaller {
             }
         }
 
-        return resultStringBuilder.toString();
+        String response = resultStringBuilder.toString();
+        return api.getParser().parse(response);
     }
 
 

@@ -2,7 +2,10 @@ package com.abed.app.ubertest.network.api;
 
 import android.support.annotation.NonNull;
 
-public abstract class FlickrBaseApi {
+import com.abed.app.ubertest.model.ApiResponse;
+import com.abed.app.ubertest.network.parser.FlickrResponseParser;
+
+public abstract class FlickrBaseApi<R extends ApiResponse> {
 
 
     private static final String MAIN_BASE_URL = "https://api.flickr.com/?&api_key=%s&";
@@ -14,14 +17,16 @@ public abstract class FlickrBaseApi {
     }
 
     @NonNull
+    abstract String getPath();
+
+    @NonNull
     public abstract RequestMethod getRequestMethod();
 
     @NonNull
-    abstract String getPath();
-
+    public abstract FlickrResponseParser<R> getParser();
 
     //Currently we only support GET
     public enum RequestMethod {
-        GET;
+        GET
     }
 }

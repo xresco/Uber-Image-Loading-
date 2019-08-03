@@ -1,6 +1,7 @@
 package com.abed.app.ubertest.network;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.abed.app.ubertest.utils.Logger;
 
@@ -25,13 +26,6 @@ class DispatcherThread {
     private final Executor executor = Executors.newSingleThreadExecutor();
 
     /**
-     * The runnable to run.
-     */
-    @NonNull
-    private final DispatcherTask task;
-
-
-    /**
      * The logger to log events
      */
     @NonNull
@@ -50,34 +44,37 @@ class DispatcherThread {
     private final String name;
 
     DispatcherThread(@NonNull String name,
-                     @NonNull DispatcherTask task,
                      @NonNull Logger logger) {
         this.name = name;
-        this.task = task;
         this.logger = logger;
     }
 
     /**
      * <p>Request that a new task is dispatched.</p>
      */
-    void requestDispatch(@NonNull final DispatcherCallback callback,
-                         @NonNull final RetryStrategy retryStrategy) {
+    <T> void requestDispatch(@NonNull DispatcherTask<T> task,
+                             @NonNull final DispatcherCallback<T> callback,
+                             @NonNull final RetryStrategy retryStrategy) {
         if (taskRunning.compareAndSet(false, true)) {
             executor.execute(() -> this.mainLoop(
-                    completionStatus -> {
-                        try {
-                            Thread.sleep(200); // sleeps a little not to call another time too soon
-                        } catch (InterruptedException e) {
-                            // do Nothing
+                    task,
+                    new DispatcherCallback<T>() {
+                        @Override
+                        public void onSuccess(@Nullable T result) {
+                            callback.onSuccess(result);
+                            taskRunning.set(false);
                         }
 
-                        callback.onDispatchFinished(completionStatus);
-                        taskRunning.set(false);
+                        @Override
+                        public void onFail(int completionStatus, @Nullable Throwable throwable) {
+                            callback.onFail(completionStatus, throwable);
+                            taskRunning.set(false);
+                        }
                     },
                     retryStrategy)
             );
         } else {
-            callback.onDispatchFinished(DispatcherCallback.STATUS_IGNORED);
+            callback.onFail(DispatcherCallback.STATUS_IGNORED, null);
         }
     }
 
@@ -85,14 +82,16 @@ class DispatcherThread {
      * <p>Main loop for the dispatcher. It monitors if there are pending calls and executes them one
      * at a time. This call can't be executed simultaneously.</p>
      */
-    private void mainLoop(@NonNull DispatcherCallback dispatcherCallback, @NonNull RetryStrategy retryStrategy) {
+    private <T> void mainLoop(@NonNull DispatcherTask<T> task,
+                              @NonNull DispatcherCallback<T> dispatcherCallback,
+                              @NonNull RetryStrategy retryStrategy) {
         long delayTimeMillis = 0;
         int failedRetries = 0;
 
         logger.logEvent(TAG, String.format("Started %s dispatcher", this.name));
 
         try {
-
+            T result = null;
             boolean succeeded;
 
             //noinspection InfiniteLoopStatement
@@ -101,7 +100,8 @@ class DispatcherThread {
                 logger.logEvent(TAG, String.format("%s dispatcher executing call", this.name));
 
                 try {
-                    succeeded = this.task.dispatch();
+                    result = task.dispatch();
+                    succeeded = true;
                 } catch (Exception e) {
                     logger.logError(TAG, String.format("%s dispatcher executing call failure", this.name), e);
                     succeeded = false;
@@ -130,39 +130,49 @@ class DispatcherThread {
                 }
             }
 
-            dispatcherCallback.onDispatchFinished(succeeded ? DispatcherCallback.STATUS_SUCCESS : DispatcherCallback.STATUS_FAILED);
+            if (succeeded) {
+                dispatcherCallback.onSuccess(result);
+            } else {
+                dispatcherCallback.onFail(DispatcherCallback.STATUS_TOO_MANY_RETRIES, null);
+            }
         } catch (RuntimeException | InterruptedException e) {
             logger.logError(TAG, String.format("%s dispatcher failed!", this.name), e);
-            dispatcherCallback.onDispatchFinished(DispatcherCallback.STATUS_FAILED);
+            dispatcherCallback.onFail(DispatcherCallback.STATUS_FAILED, e);
         }
     }
 
     /**
      * Interface that dispatch calls have to implement.
      */
-    interface DispatcherTask {
-
+    interface DispatcherTask<T> {
         /**
          * Performs the dispatch call.
-         *
-         * @return true if the call cass successful.
-         * @throws Exception if an error occurs.
          */
-        boolean dispatch() throws Exception;
+        T dispatch();
     }
 
-    interface DispatcherCallback {
+    interface DispatcherCallback<T> {
 
-        int STATUS_SUCCESS = 1;
-        int STATUS_IGNORED = 2;
-        int STATUS_FAILED = 3;
+        int STATUS_IGNORED = 1;
+        int STATUS_FAILED = 2;
+        int STATUS_TOO_MANY_RETRIES = 3;
 
-        void onDispatchFinished(int completionStatus);
+        void onSuccess(@Nullable T result);
+
+        void onFail(int completionStatus, @Nullable Throwable throwable);
     }
 
     @NonNull
-    static final DispatcherCallback NOOP = status -> {
-        // Do Nothing
+    static final DispatcherCallback NOOP = new DispatcherCallback() {
+        @Override
+        public void onSuccess(@NonNull Object result) {
+            //Do nothing
+        }
+
+        @Override
+        public void onFail(int completionStatus, @Nullable Throwable throwable) {
+            //Do nothing
+        }
     };
 
 }
