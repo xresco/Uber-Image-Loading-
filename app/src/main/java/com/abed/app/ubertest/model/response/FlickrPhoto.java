@@ -1,4 +1,4 @@
-package com.abed.app.ubertest.model;
+package com.abed.app.ubertest.model.response;
 
 public class FlickrPhoto implements ApiResponse {
 

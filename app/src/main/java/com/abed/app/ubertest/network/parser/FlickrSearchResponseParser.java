@@ -2,8 +2,8 @@ package com.abed.app.ubertest.network.parser;
 
 import android.support.annotation.Nullable;
 
-import com.abed.app.ubertest.model.FlickrPhoto;
-import com.abed.app.ubertest.model.FlickrSearchResponse;
+import com.abed.app.ubertest.model.response.FlickrPhoto;
+import com.abed.app.ubertest.model.response.FlickrSearchResponse;
 import com.abed.app.ubertest.network.ValidationException;
 
 import org.json.JSONArray;

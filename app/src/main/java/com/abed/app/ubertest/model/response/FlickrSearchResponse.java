@@ -1,4 +1,4 @@
-package com.abed.app.ubertest.model;
+package com.abed.app.ubertest.model.response;
 
 import java.util.List;
 

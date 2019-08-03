@@ -2,13 +2,13 @@ package com.abed.app.ubertest.network.api;
 
 import android.support.annotation.NonNull;
 
-import com.abed.app.ubertest.model.FlickrSearchResponse;
+import com.abed.app.ubertest.model.response.FlickrSearchResponse;
 import com.abed.app.ubertest.network.parser.FlickrResponseParser;
 import com.abed.app.ubertest.network.parser.FlickrSearchResponseParser;
 
 public class FlickrSearchApi extends FlickrBaseApi<FlickrSearchResponse> {
 
-    private static final String GET_SEARCH_IMAGES_URL = "&method=flickr.photos.search";
+    private static final String GET_SEARCH_IMAGES_URL = "&method=flickr.photos.search&text=kitten";
 
     @NonNull
     @Override

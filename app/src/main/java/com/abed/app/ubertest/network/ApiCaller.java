@@ -4,7 +4,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
-import com.abed.app.ubertest.model.ApiResponse;
+import com.abed.app.ubertest.model.request.ApiRequestData;
+import com.abed.app.ubertest.model.response.ApiResponse;
 import com.abed.app.ubertest.network.api.FlickrBaseApi;
 
 import java.io.BufferedReader;
@@ -23,11 +24,13 @@ public class ApiCaller {
 
     @NonNull
     @WorkerThread
-    public <R extends ApiResponse> R execute(@NonNull FlickrBaseApi<R> api) throws IOException, ValidationException {
-        URL url = new URL(api.getUrl());
+    public <R extends ApiResponse> R execute(@NonNull FlickrBaseApi<R> api, @Nullable ApiRequestData data) throws IOException, ValidationException {
+        String urlString = data == null ? api.getUrl() : api.getUrl() + data.toUrlParameters();
+        URL url = new URL(urlString);
         connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(TIMEOUT);
         connection.setReadTimeout(TIMEOUT);
+        connection.setRequestProperty("Content-Type", "application/json contentType");
         connection.setRequestMethod(api.getRequestMethod().name());
         connection.setRequestProperty("Charset", CHARSET_NAME);
         StringBuilder resultStringBuilder = new StringBuilder();
