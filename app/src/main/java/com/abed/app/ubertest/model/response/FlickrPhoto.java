@@ -26,7 +26,7 @@ public class FlickrPhoto implements ApiResponse {
 
     public String getImageURL() {
         // URL Format-> http://farm{farm}.static.flickr.com/{server}/{id}_{secret}.jpg
-        String imageUrl = "http://farm{farm}.static.flickr.com/{server}/{id}_{secret}.jpg";
+        String imageUrl = "https://farm{farm}.static.flickr.com/{server}/{id}_{secret}.jpg";
         imageUrl = imageUrl.replace("{farm}", String.valueOf(farm));
         imageUrl = imageUrl.replace("{server}", server);
         imageUrl = imageUrl.replace("{id}", id);
