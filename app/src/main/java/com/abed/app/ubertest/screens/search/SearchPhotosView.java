@@ -1,4 +1,4 @@
-package com.abed.app.ubertest;
+package com.abed.app.ubertest.screens.search;
 
 import android.support.annotation.NonNull;
 

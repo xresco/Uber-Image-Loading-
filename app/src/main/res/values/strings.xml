@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">UberTest</string>
+    <string name="app_name">Uber Test</string>
+    <string name="search_hint">Enter your search here</string>
+    <string name="search_button_title">Search</string>
+
 </resources>
