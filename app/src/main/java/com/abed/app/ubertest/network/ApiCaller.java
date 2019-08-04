@@ -19,15 +19,12 @@ public class ApiCaller {
     private static final String CHARSET_NAME = "UTF-8";
     private static final int TIMEOUT = 3000;
 
-    @Nullable
-    private HttpURLConnection connection;
-
     @NonNull
     @WorkerThread
-    public <R extends ApiResponse> R execute(@NonNull FlickrBaseApi<R> api, @Nullable ApiRequestData data) throws IOException, ValidationException {
+    public static <R extends ApiResponse> R execute(@NonNull FlickrBaseApi<R> api, @Nullable ApiRequestData data) throws IOException, ValidationException {
         String urlString = data == null ? api.getUrl() : api.getUrl() + data.toUrlParameters();
         URL url = new URL(urlString);
-        connection = (HttpURLConnection) url.openConnection();
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setConnectTimeout(TIMEOUT);
         connection.setReadTimeout(TIMEOUT);
         connection.setRequestProperty("Content-Type", "application/json contentType");
@@ -35,7 +32,16 @@ public class ApiCaller {
         connection.setRequestProperty("Charset", CHARSET_NAME);
         StringBuilder resultStringBuilder = new StringBuilder();
 
-        try (BufferedReader bufReader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+        BufferedReader bufReader;
+
+        if (connection.getResponseCode() == 200) {
+            bufReader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        } else {
+            bufReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+        }
+
+
+        try {
             String line = bufReader.readLine();
 
             while (line != null) {
@@ -44,19 +50,12 @@ public class ApiCaller {
             }
 
         } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
+            connection.disconnect();
+            bufReader.close();
         }
 
         String response = resultStringBuilder.toString();
         return api.getParser().parse(response);
     }
 
-
-    public void stop() {
-        if (connection != null) {
-            connection.disconnect();
-        }
-    }
 }
