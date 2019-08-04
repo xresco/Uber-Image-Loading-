@@ -8,7 +8,7 @@ import com.abed.app.ubertest.network.parser.FlickrSearchResponseParser;
 
 public class FlickrSearchApi extends FlickrBaseApi<FlickrSearchResponse> {
 
-    private static final String GET_SEARCH_IMAGES_URL = "&method=flickr.photos.search&text=kitten";
+    private static final String GET_SEARCH_IMAGES_URL = "&method=flickr.photos.search&safe_search=\"1\"";
 
     @NonNull
     @Override
